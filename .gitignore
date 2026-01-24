@@ -1,0 +1,71 @@
+# ==============================================================================
+# 1. COMPILED OUTPUT (Sử dụng **/ để quét mọi thư mục con)
+# ==============================================================================
+**/dist
+**/node_modules
+**/build
+**/dist-*
+
+# ==============================================================================
+# 2. LOGS
+# ==============================================================================
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ==============================================================================
+# 3. OS & IDEs (Bỏ dấu / ở đầu để chặn ở cả gốc lẫn project con)
+# ==============================================================================
+.DS_Store
+.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==============================================================================
+# 4. TESTING & COVERAGE (Bỏ dấu / ở đầu để quét sâu vào project NestJS)
+# ==============================================================================
+**/coverage
+**/.nyc_output
+
+# ==============================================================================
+# 5. ENVIRONMENT VARIABLES (Quan trọng nhất)
+# ==============================================================================
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+**/.env.*
+
+# ==============================================================================
+# 6. PRISMA & RUNTIME (Sửa đường dẫn Prisma cho đúng cấu trúc mới)
+# ==============================================================================
+**/generated/prisma
+pids
+*.pid
+*.seed
+*.pid.lock
+.temp
+.tmp
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ==============================================================================
+# 7. DOCKER & DATABASE (Bổ sung cho cấu trúc hiện tại của bạn)
+# ==============================================================================
+# Nếu bạn dùng volume cho DB trong docker-compose, hãy chặn folder data đó ở đây
+# Ví dụ: nếu bạn map volume vào folder ./data-db
+postgres_data/
+**/postgres_data/
