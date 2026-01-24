@@ -9,6 +9,7 @@ export class CreateProductDto {
     name: string;
 
     @IsNotEmpty({message: "Giá sản phẩm không được để trống."})
+    @Type(() => Number)
     @IsNumber({}, {message: "Giá sản phẩm phải là một số."})
     @ApiProperty({ example: 50000, description: 'The price of the product in VND.' })
     price: number;
@@ -19,6 +20,7 @@ export class CreateProductDto {
     description?: string;
 
     @IsNotEmpty({message: "Số lượng sản phẩm không được để trống."})
+    @Type(() => Number)
     @IsNumber({}, {message: "Số lượng sản phẩm phải là một số."})
     @ApiProperty({ example: 100, description: 'The available quantity of the product in stock.' })
     quantity: number;
@@ -27,4 +29,14 @@ export class CreateProductDto {
     @Type(() => Number)
     @ApiProperty({ example: 1, description: 'The category ID to which the product belongs.' })
     categoryId: number;
+
+    @ApiProperty({ 
+        description: 'The URL of the product image.', 
+        type: 'array',
+        items: { 
+            type: 'string',
+            format: 'binary'
+        },
+    })
+    image: string;
 }

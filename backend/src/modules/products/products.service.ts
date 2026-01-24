@@ -1,24 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
-  async create(createProductDto: CreateProductDto, file: Express.Multer.File) {
+  constructor(private readonly prisma: PrismaService) {}
 
-    return 'This action adds a new product';
+  async create(createProductDto: CreateProductDto, imagesUrl: string) {
+    return this.prisma.product.create({
+      data: {
+        name: createProductDto.name,
+        description: createProductDto.description,
+        price: Number(createProductDto.price),
+        quantity: Number(createProductDto.quantity),
+        categoryId: Number(createProductDto.categoryId),
+        images: {
+          create: {
+            url: imagesUrl,
+            isPrimary: true,
+          },
+        },
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll() {
+    return await this.prisma.product.findMany({
+      include: {
+        images: true,
+        category: true,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    return await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        category: true,
+      },
+    });
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    return await this.prisma.product.update({
+      where: { id },
+      data: {
+        name: updateProductDto.name,
+        description: updateProductDto.description,
+        price: Number(updateProductDto.price),
+        quantity: Number(updateProductDto.quantity),
+      },
+    });
   }
 
   remove(id: number) {

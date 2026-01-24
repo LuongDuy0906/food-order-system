@@ -1,6 +1,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { create } from "domain";
+import { url } from "inspector";
 
 
 const prisma = new PrismaClient();
@@ -54,21 +55,36 @@ async function main() {
                         name: "Phở bò", 
                         price: 50000,
                         description: "Phở bò tái chín, nước dùng thơm ngon, bánh phở mềm mại.",
-                        image: "https://example.com/images/pho_bo.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 100, 
                     },
                     { 
                         name: "Bún chả", 
                         price: 45000,
                         description: "Bún chả Hà Nội với thịt nướng thơm lừng, nước mắm chua ngọt.",
-                        image: "https://example.com/images/bun_cha.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 100, 
                     },
                     { 
                         name: "Cơm tấm", 
                         price: 40000,
                         description: "Cơm tấm sườn bì chả, ăn kèm với đồ chua và nước mắm pha.",
-                        image: "https://example.com/images/com_tam.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 100,  
                     },
                 ],    
@@ -85,21 +101,36 @@ async function main() {
                         name: "Trà đá",
                         price: 5000,
                         description: "Ly trà đá mát lạnh, giải khát tuyệt vời.",
-                        image: "https://example.com/images/tra_da.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 200,
                     },
                     { 
                         name: "Cà phê sữa đá", 
                         price: 20000,
                         description: "Cà phê đen pha với sữa đặc, uống đá thơm ngon.",
-                        image: "https://example.com/images/ca_phe_sua_da.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 150, 
                     },
                     { 
                         name: "Nước cam ép", 
                         price: 25000,
                         description: "Nước cam tươi ép nguyên chất, không đường.",
-                        image: "https://example.com/images/nuoc_cam_ep.jpg",
+                        images: {
+                            create: {
+                                url: "https://example.com/images/tra_da_1.jpg",
+                                isPrimary: true,
+                            }
+                        },
                         quantity: 150,
                     },
                 ],    

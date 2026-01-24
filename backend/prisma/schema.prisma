@@ -33,15 +33,23 @@ model Category {
 model Product {
   id          Int         @id @default(autoincrement())
   name        String
-  description String
+  description String?
+  images      Image[]
   price       Float
-  image       String?
   quantity    Int         @default(0)
   category    Category    @relation(fields: [categoryId], references: [id])
   categoryId  Int
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+}
+
+model Image {
+  id        Int     @id @default(autoincrement())
+  url       String
+  isPrimary Boolean @default(false)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Order {
