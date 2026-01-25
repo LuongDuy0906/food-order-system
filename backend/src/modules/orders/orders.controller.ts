@@ -27,6 +27,11 @@ export class OrdersController {
     return this.ordersService.update(+id, updateOrderDto);
   }
 
+  @Patch(':id/next')
+  updateStatus(@Param('id') id: string) {
+    return this.ordersService.updateStatus(+id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ordersService.remove(+id);

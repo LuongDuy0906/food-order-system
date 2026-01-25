@@ -45,6 +45,8 @@ async function main() {
     await prisma.order.deleteMany();
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
+    await prisma.image.deleteMany();
+    await prisma.table.deleteMany();
 
     const foodCategory = await prisma.category.create({
         data: {
