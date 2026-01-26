@@ -13,11 +13,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Profile {
+  id       Int      @id @default(autoincrement())
+  name     String
+  address  String
+  email    String
+  birthday DateTime
+  phone    String
+  user     User?
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
   role      String   @default("WAITER")
+  profileId Int      @unique
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -36,7 +48,7 @@ model Product {
   description String?
   images      Image[]
   price       Float
-  quantity    Int         @default(0)
+  isEnable    Boolean
   category    Category    @relation(fields: [categoryId], references: [id])
   categoryId  Int
   orderItems  OrderItem[]
@@ -56,6 +68,8 @@ model Table {
   id        Int      @id @default(autoincrement())
   number    String   @unique
   capacity  Int
+  floor     Int
+  isVip     Boolean  @default(false)
   status    String   @default("AVAILABLE")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

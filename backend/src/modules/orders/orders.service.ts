@@ -3,7 +3,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
-import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
@@ -42,7 +41,7 @@ export class OrdersService {
         throw new NotFoundException(`Sản phẩm với ID ${item.productId} không tồn tại hoặc đã bị xóa.`);
       }
 
-      if (!product.quantity) {
+      if (!product.isEnable) {
          throw new BadRequestException(`Món ${product.name} hiện đang tạm hết.`);
       }
 
@@ -129,7 +128,7 @@ export class OrdersService {
         throw new NotFoundException(`Sản phẩm với ID ${item.productId} không tồn tại hoặc đã bị xóa.`);
       }
 
-      if (!product.quantity) {
+      if (!product.isEnable) {
          throw new BadRequestException(`Món ${product.name} hiện đang tạm hết.`);
       }
 
@@ -190,8 +189,8 @@ export class OrdersService {
 } 
 
 const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
-    [OrderStatus.PENDING]: OrderStatus.COMFIRMED,
-    [OrderStatus.COMFIRMED]: OrderStatus.IN_PROGRESS,
-    [OrderStatus.IN_PROGRESS]: OrderStatus.COMPLETED,
-    [OrderStatus.COMPLETED]: null,
-  };
+  [OrderStatus.PENDING]: OrderStatus.COMFIRMED,
+  [OrderStatus.COMFIRMED]: OrderStatus.IN_PROGRESS,
+  [OrderStatus.IN_PROGRESS]: OrderStatus.COMPLETED,
+  [OrderStatus.COMPLETED]: null,
+};

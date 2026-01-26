@@ -19,11 +19,8 @@ export class CreateProductDto {
     @ApiProperty({ example: 'Phở bò tái chín, nước dùng thơm ngon, bánh phở mềm mại.', description: 'A brief description of the product.' })
     description?: string;
 
-    @IsNotEmpty({message: "Số lượng sản phẩm không được để trống."})
-    @Type(() => Number)
-    @IsNumber({}, {message: "Số lượng sản phẩm phải là một số."})
-    @ApiProperty({ example: 100, description: 'The available quantity of the product in stock.' })
-    quantity: number;
+    @ApiProperty()
+    isEnable: boolean
 
     @IsDefined()
     @Type(() => Number)

@@ -15,7 +15,7 @@ export class ProductsService {
         name: createProductDto.name,
         description: createProductDto.description,
         price: Number(createProductDto.price),
-        quantity: Number(createProductDto.quantity),
+        isEnable: createProductDto.isEnable,
         categoryId: Number(createProductDto.categoryId),
         images: {
           create: {
@@ -68,8 +68,8 @@ export class ProductsService {
     if(updateProductDto.description){
       newProduct['description'] = updateProductDto.description;
     }
-    if(updateProductDto.quantity){
-      newProduct['quantity'] = Number(updateProductDto.quantity);
+    if(updateProductDto.isEnable){
+      newProduct['isEnable'] = updateProductDto.isEnable;
     }
     if(updateProductDto.categoryId){
       newProduct['categoryId'] = Number(updateProductDto.categoryId);

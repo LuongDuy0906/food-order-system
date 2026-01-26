@@ -1,41 +1,64 @@
-
 import { PrismaClient } from "@prisma/client";
-import { create } from "domain";
-import { url } from "inspector";
-
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log("Đang tạo dữ liệu mẫu...");
 
-    const admin = await prisma.user.upsert({
-        where: {username: "admin"},
+    const adminProfile = await prisma.profile.upsert({
+        where: { id: 1 },
         update: {},
         create: {
-            username: "admin",
-            password: "$2a$10$TZ8eAvDqVYLYuHDoEzPokekzj1qjd8ksn278yA5TXcTgwEFb9GVDm",
-            role: "ADMIN",
+            name: "Lương Đức Duy",
+            address: "123 Admin Street",
+            email: "admin@example.com",
+            birthday: new Date("1990-01-01"),
+            phone: "0987654321",
+            user: {
+                create: {
+                    username: "admin@example.com",
+                    password: "$2a$10$TZ8eAvDqVYLYuHDoEzPokekzj1qjd8ksn278yA5TXcTgwEFb9GVDm",
+                    role: "ADMIN",
+                }
+            }
         }
     });
 
-    const waiter = await prisma.user.upsert({
-        where: {username: "waiter"},
+    const waiterProfile = await prisma.profile.upsert({
+        where: { id: 2 },
         update: {},
         create: {
-            username: "waiter",
-            password: "$2a$10$Q4XO12MkW4Sr8rfv.lCxvOPmBagYNz5xNJMZIzMawyhYLpbvSAbTi",
-            role: "WAITER",
+            name: "waiter",
+            address: "123 Admin Street",
+            email: "waiter@example.com",
+            birthday: new Date("1990-01-01"),
+            phone: "0987654321",
+            user: {
+                create: {
+                    username: "waiter@example.com",
+                    password: "$2a$10$Q4XO12MkW4Sr8rfv.lCxvOPmBagYNz5xNJMZIzMawyhYLpbvSAbTi",
+                    role: "WAITER",
+                }
+            }
         }
     });
 
-    const chef = await prisma.user.upsert({
-        where: {username: "chef"},
+    const chefProfile = await prisma.profile.upsert({
+        where: { id: 3 },
         update: {},
         create: {
-            username: "chef",
-            password: "$2a$10$3zspXuuMMv.f1lbe0tTgMOCpkaJG60nUQmbxhXQYDuKU.v2dWTtsm",
-            role: "CHEF",
+            name: "chef",
+            address: "123 Admin Street",
+            email: "chef@example.com",
+            birthday: new Date("1990-01-01"),
+            phone: "0987654321",
+            user: {
+                create: {
+                    username: "chef@example.com",
+                    password: "$2a$10$3zspXuuMMv.f1lbe0tTgMOCpkaJG60nUQmbxhXQYDuKU.v2dWTtsm",
+                    role: "CHEF",
+                }
+            }
         }
     });
 
@@ -63,7 +86,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 100, 
+                        isEnable: true, 
                     },
                     { 
                         name: "Bún chả", 
@@ -75,7 +98,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 100, 
+                        isEnable: true,  
                     },
                     { 
                         name: "Cơm tấm", 
@@ -87,7 +110,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 100,  
+                        isEnable: true,   
                     },
                 ],    
             } 
@@ -109,7 +132,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 200,
+                        isEnable: true, 
                     },
                     { 
                         name: "Cà phê sữa đá", 
@@ -121,7 +144,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 150, 
+                        isEnable: true, 
                     },
                     { 
                         name: "Nước cam ép", 
@@ -133,7 +156,7 @@ async function main() {
                                 isPrimary: true,
                             }
                         },
-                        quantity: 150,
+                        isEnable: true, 
                     },
                 ],    
             } 

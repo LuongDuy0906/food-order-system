@@ -11,7 +11,9 @@ export class TablesService {
     return await this.prisma.table.create({
       data: {
         number: createTableDto.number,
-        capacity: Number(createTableDto.capacity),
+        capacity: createTableDto.capacity,
+        floor: createTableDto.floor,
+        isVip: createTableDto.isVip
       },
     });
   }
