@@ -186,7 +186,69 @@ export class OrdersService {
       where: { id },
     });
   }
-} 
+
+  async getTotalOrdersPerDay(startDate: string, endDate: string, type: string) {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    const result = await this.prisma.order.aggregate({
+      _sum: {
+        totalAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+        status: 'COMPLETED'
+      }
+    });
+
+    const detail = await this.prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+        status: "COMPLETED",
+      },
+      select: {
+        createdAt: true,
+        totalAmount: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const groupedData = detail.reduce((acc, order) => {
+      let key: string = '';
+      const isoString = order.createdAt.toISOString();
+
+      if(type === 'hour'){
+        key = `${isoString.substring(11, 13)}:00`;
+      }
+      else if(type === 'date'){
+        key = isoString.split('T')[0];
+      }
+      else if(type === 'month'){
+        key = isoString.substring(0, 7);
+      }
+
+      if (!acc[key]) acc[key] = 0;
+      acc[key] += order.totalAmount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const chartData = Object.keys(groupedData).map(key => ({
+      label: key,
+      value: groupedData[key]
+    }));
+
+    return {
+      revenue: result._sum.totalAmount || 0,
+      data: chartData
+    };
+  }
+}
 
 const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
   [OrderStatus.PENDING]: OrderStatus.COMFIRMED,
