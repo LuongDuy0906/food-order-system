@@ -38,7 +38,7 @@ export class ProfilesService {
   async findProfile(name: string) {
     return await this.prisma.profile.findMany({
       where: {
-        name: name.toLowerCase()
+        email: name
       }
     });
   }

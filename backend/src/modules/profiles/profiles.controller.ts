@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -17,9 +19,11 @@ export class ProfilesController {
     return this.profilesService.findAll();
   }
 
-  @Get(':name')
-  findOne(@Param('name') name: string) {
-    return this.profilesService.findProfile(name);
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('name')
+  findOne(@Request() req) {
+    return this.profilesService.findProfile(req.user.username);
   }
 
   @Patch(':id')
