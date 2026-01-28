@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("Đang tạo dữ liệu mẫu...");
 
-    const adminProfile = await prisma.profile.upsert({
+    const adminEmployee = await prisma.employee.upsert({
         where: { id: 1 },
         update: {},
         create: {
@@ -24,7 +24,7 @@ async function main() {
         }
     });
 
-    const waiterProfile = await prisma.profile.upsert({
+    const waiterEmployee = await prisma.employee.upsert({
         where: { id: 2 },
         update: {},
         create: {
@@ -43,7 +43,7 @@ async function main() {
         }
     });
 
-    const chefProfile = await prisma.profile.upsert({
+    const chefEmployee = await prisma.employee.upsert({
         where: { id: 3 },
         update: {},
         create: {

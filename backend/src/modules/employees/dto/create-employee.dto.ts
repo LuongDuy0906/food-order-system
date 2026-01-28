@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class CreateProfileDto {
+export class CreateEmployeeDto {
     @ApiProperty()
     @IsNotEmpty({message: "Tên không được để trống"})
     @IsString()
