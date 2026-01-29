@@ -8,10 +8,15 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './modules/auth/guards/roles/roles.guard';
 
 @Module({
   imports: [ProductsModule, PrismaModule, TablesModule, OrdersModule, EmployeesModule, UsersModule, AuthModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService
+  ],
+  
 })
 export class AppModule {}

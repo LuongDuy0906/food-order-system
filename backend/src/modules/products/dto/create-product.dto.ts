@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsDefined, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateProductDto {
     @IsString({message: "Tên sản phẩm phải là chuỗi ký tự."})
@@ -20,6 +20,8 @@ export class CreateProductDto {
     description?: string;
 
     @ApiProperty()
+    @Type(() => Boolean)
+    @IsBoolean()
     isEnable: boolean
 
     @IsDefined()
@@ -35,5 +37,6 @@ export class CreateProductDto {
             format: 'binary'
         },
     })
-    image: string;
+    @IsOptional()
+    image?: string;
 }

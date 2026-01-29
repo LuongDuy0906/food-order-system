@@ -5,6 +5,15 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("Đang tạo dữ liệu mẫu...");
 
+    await prisma.orderItem.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.image.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.table.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.employee.deleteMany();
+
     const adminEmployee = await prisma.employee.upsert({
         where: { id: 1 },
         update: {},
@@ -36,7 +45,7 @@ async function main() {
             user: {
                 create: {
                     username: "waiter@example.com",
-                    password: "$2a$10$Q4XO12MkW4Sr8rfv.lCxvOPmBagYNz5xNJMZIzMawyhYLpbvSAbTi",
+                    password: "$2a$10$1z40eBv/as8PS9ANMbnc4u0wM2.9zfdADlvguwDk2Jc0sgHpr3Y9.",
                     role: "WAITER",
                 }
             }
@@ -55,7 +64,7 @@ async function main() {
             user: {
                 create: {
                     username: "chef@example.com",
-                    password: "$2a$10$3zspXuuMMv.f1lbe0tTgMOCpkaJG60nUQmbxhXQYDuKU.v2dWTtsm",
+                    password: "$2a$10$O/SsCd0pCe8KpWbQWZTi7OF7qvRuDAWeaO2H0zqJ8aalVhE9z4XCS",
                     role: "CHEF",
                 }
             }
@@ -63,13 +72,6 @@ async function main() {
     });
 
     console.log("Khởi tạo thành công 3 người dùng.");
-
-    await prisma.orderItem.deleteMany();
-    await prisma.order.deleteMany();
-    await prisma.product.deleteMany();
-    await prisma.category.deleteMany();
-    await prisma.image.deleteMany();
-    await prisma.table.deleteMany();
 
     const foodCategory = await prisma.category.create({
         data: {
