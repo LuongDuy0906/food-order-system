@@ -19,16 +19,14 @@ export class RolesGuard implements CanActivate {
     if (!requiredRoles) {
       return true;
     }
+    
     let user: any;
 
     if (context.getType() === 'http') {
-      // --> Nếu là API thường
       const request = context.switchToHttp().getRequest();
       user = request.user;
     } else if (context.getType() === 'ws') {
-      // --> Nếu là Socket
       const client = context.switchToWs().getClient();
-      // Lấy user đã được gắn vào client ở bước handleConnection trước đó
       user = client.data.user; 
     }
 

@@ -48,7 +48,7 @@ model Product {
   description String?
   images      Image[]
   price       Float
-  isEnable    Boolean
+  isEnable    Boolean     @default(true)
   category    Category    @relation(fields: [categoryId], references: [id])
   categoryId  Int
   orderItems  OrderItem[]
@@ -70,7 +70,7 @@ model Table {
   capacity  Int
   floor     Int
   isVip     Boolean  @default(false)
-  status    String   @default("AVAILABLE")
+  status    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]

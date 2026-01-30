@@ -73,6 +73,30 @@ async function main() {
 
     console.log("Khởi tạo thành công 3 người dùng.");
 
+    const table1 = await prisma.table.create({
+        data: {
+            number: "B1",
+            capacity: 4,
+            floor: 1,
+        },
+    });
+
+    const table2 = await prisma.table.create({
+        data: {
+            number: "B2",
+            capacity: 4,
+            floor: 1,
+        },
+    });
+
+    const table3 = await prisma.table.create({
+        data: {
+            number: "B3",
+            capacity: 4,
+            floor: 1,
+        },
+    });
+
     const foodCategory = await prisma.category.create({
         data: {
             name: "Đồ ăn",

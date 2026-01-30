@@ -20,24 +20,23 @@ export class EventsGateway{
 
     async handleConnection(client: Socket) {
         try {
-        const token = client.handshake.auth.token || client.handshake.headers.authorization;
+            const token = client.handshake.auth.token || client.handshake.headers.authorization;
 
-        if (!token) {
-            console.log(`❌ Client ${client.id} không có token -> Ngắt kết nối`);
-            client.disconnect();
-            return;
-        }
-
-        const secret = this.configService.get<string>('jwt.secret'); // Lấy secret từ config
-        const payload = await this.jwtService.verifyAsync(token, { secret });
-
-        client.data.user = payload; 
-
-        console.log(`✅ Client ${client.id} đã kết nối. User: ${payload.email} (${payload.role})`);
+            if (token) {
+                const secret = this.configService.get<string>('jwt.secret');
+                const payload = await this.jwtService.verifyAsync(token, { secret });
+                
+                client.data.user = payload; 
+                console.log(`🔐 User ${payload.role} đã kết nối.`);
+                
+            } else {
+                client.data.user = null;
+                console.log(`🌍 Khách vãng lai (Guest) đã kết nối: ${client.id}`);
+            }
 
         } catch (error) {
-        console.log(`❌ Token không hợp lệ: ${error.message}`);
-        client.disconnect(); // Đuổi ngay lập tức
+            console.log(`❌ Token không hợp lệ: ${error.message}`);
+            client.disconnect();
         }
     }
 
