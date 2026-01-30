@@ -3,10 +3,14 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { EventsGateway } from 'src/events/events.gateway';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService){}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsGateway: EventsGateway,
+  ){}
 
   async create(createOrderDto: CreateOrderDto) {
     const { tableNumber, items } = createOrderDto;
@@ -55,7 +59,7 @@ export class OrdersService {
       };
     });
 
-    return await this.prisma.order.create({
+    const savedOrder = await this.prisma.order.create({
       data: {
         tableId: tableId.id,
         totalAmount,
@@ -69,6 +73,11 @@ export class OrdersService {
         }
       },
     });
+
+    console.log('🔥 Đang bắn socket tin hiệu cho Waiter...');
+    this.eventsGateway.notifyWaiterNewOrder(savedOrder);
+
+    return savedOrder
   }
 
   async findAll() {
@@ -175,10 +184,18 @@ export class OrdersService {
       throw new BadRequestException('Không thể cập nhật trạng thái tiếp theo');
     }
 
-    return await this.prisma.order.update({
+    const updateStatusOrder = await this.prisma.order.update({
       where: { id },
       data: { status: newStatus },
     });
+
+    if(newStatus === OrderStatus.COMFIRMED){
+      this.eventsGateway.notifyChefNewConfirmedOrder(updateStatusOrder);
+    }
+
+    this.eventsGateway.notifyCustomerOrderStatus(id, newStatus);
+
+    return updateStatusOrder;
   }
 
   async remove(id: number) {
