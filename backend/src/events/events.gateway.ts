@@ -6,6 +6,13 @@ import { Role } from "@prisma/client";
 import { Server, Socket } from "socket.io";
 import { Roles } from "src/modules/auth/decorators/roles.decorator";
 import { RolesGuard } from "src/modules/auth/guards/roles/roles.guard";
+import { OrdersService } from "src/modules/orders/orders.service";
+import { PrismaService } from "src/prisma/prisma.service";
+
+interface JoinOrderInterface {
+    orderId: number;
+    accessKey: string;
+}
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway{
@@ -15,7 +22,8 @@ export class EventsGateway{
 
     constructor(
       private jwtService: JwtService,
-      private configService: ConfigService
+      private configService: ConfigService,
+      private readonly prisma: PrismaService,
     ) {}
 
     async handleConnection(client: Socket) {
@@ -55,8 +63,45 @@ export class EventsGateway{
     }
 
     @SubscribeMessage('join_order_room')
-    handleJoinOrderRoom(@ConnectedSocket() client: Socket, @MessageBody() orderId: number) {
-        client.join(`order_${orderId}`);
+    async handleJoinOrderRoom(
+        @ConnectedSocket() client: Socket, 
+        @MessageBody() rawPayload: JoinOrderInterface) 
+    {
+        let payload = rawPayload;
+
+        if (typeof rawPayload === 'string') {
+            try {
+                payload = JSON.parse(rawPayload);
+            } catch (error) {
+                console.log('❌ Lỗi định dạng JSON:', rawPayload);
+                return; 
+            }
+        }
+
+        console.log('📦 Payload sau khi xử lý:', payload);
+
+        if (!payload || !payload.orderId || !payload.accessKey) {
+            console.log('❌ Thiếu orderId hoặc accessKey');
+            return;
+        }
+
+        const order = await this.prisma.order.findUnique({
+            where: { id: Number(payload.orderId) },
+        });
+
+        if (!order) {
+            console.log(`❌ Đơn hàng ${payload.orderId} không tồn tại`);
+            return;
+        }
+
+        if(order.accessKey !== payload.accessKey) {
+            console.log(`❌ Mã truy cập không hợp lệ cho đơn hàng ${payload.orderId}`);
+            return;
+        }
+
+        const roomName = `order_${payload.orderId}`;
+        client.join(roomName);
+        console.log(`✅ Khách hàng đã vào theo dõi đơn ${payload.orderId} (Key hợp lệ)`);
     }
 
     notifyWaiterNewOrder(order: any){

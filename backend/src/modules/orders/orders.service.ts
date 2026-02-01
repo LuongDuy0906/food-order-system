@@ -4,6 +4,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import { EventsGateway } from 'src/events/events.gateway';
+import { ppid } from 'process';
 
 @Injectable()
 export class OrdersService {
@@ -22,20 +23,21 @@ export class OrdersService {
       },
     });
 
-    const tableId = await this.prisma.table.findUnique({
-      select: { id: true },
+    const table = await this.prisma.table.findUnique({
+      select: { id: true, status: true },
       where: {
         number: tableNumber,
       },
     });
 
-    if(!tableId){
-      throw new BadRequestException('Bàn không tồn tại');
+    if(!table || table.status === false){
+      throw new BadRequestException('Bàn không khả dụng để đặt món');
     }
 
     if (products.length !== productsId.length) {
       throw new BadRequestException('Có sản phẩm không tồn tại hoặc đã bị xóa');
     }
+
 
     let totalAmount = 0;
     const orderItemsData = items.map(item => {
@@ -59,36 +61,110 @@ export class OrdersService {
       };
     });
 
-    const savedOrder = await this.prisma.order.create({
-      data: {
-        tableId: tableId.id,
-        totalAmount,
-        items: {
-          create: orderItemsData,
+    const [savedOrder] = await this.prisma.$transaction([
+      this.prisma.order.create({
+        data: {
+          tableId: table.id,
+          totalAmount,
+          items: {
+            create: orderItemsData,
+          },
         },
-      },
-      include: {
-        items: {
-          include: { product: true },
-        }
-      },
-    });
+        include: {
+          items: { 
+            include: { 
+              product: true 
+            } 
+          },
+        },
+      }),
+      this.prisma.table.update({
+        where: { id: table.id },
+        data: { status: false },
+      }),
+    ]);
 
-    console.log('🔥 Đang bắn socket tin hiệu cho Waiter...');
     this.eventsGateway.notifyWaiterNewOrder(savedOrder);
 
-    return savedOrder
+    return {
+      orderId: savedOrder.id,
+      accessKey: savedOrder.accessKey,
+      message: 'Đặt món thành công! Vui lòng lưu lại mã truy cập để theo dõi trạng thái đơn hàng.'
+    }
   }
 
   async findAll() {
-    return await this.prisma.order.findMany({
-      include: {
-        items: {
-          include: { product: true },
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    const [orderStats, activeTables, recentOrders] = await Promise.all([
+      this.prisma.order.aggregate({
+        _count: {
+          id: true,
         },
-        table: true,
-      },
+        _sum: {
+          totalAmount: true
+        },
+        _avg: {
+          totalAmount: true
+        },
+        where: {
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      }),
+
+      this.prisma.table.aggregate({
+        _count: {
+          id: true
+        },
+        where: {
+          status: false
+        }
+      }),
+
+      this.prisma.order.findMany({
+        where: {
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        },
+        include: {
+          table: true,
+          items: {
+            select: {
+              quantity: true
+            }
+          }
+        }
+      })
+    ]);
+
+    const formattedOrders = recentOrders.map(order => {
+
+      const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+      return {
+          id: order.id,
+          tableName: order.table?.number,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          createdAt: order.createdAt,
+          itemCount: totalItems 
+        };
     });
+
+    return {
+      totalOrders: orderStats._count.id || 0,
+      totalRevenue: orderStats._sum.totalAmount || 0,
+      averageOrderValue: orderStats._avg.totalAmount || 0,
+      activeTables: activeTables._count.id,
+      recentOrders: formattedOrders
+    };
   }
 
   async findOne(id: number) {
@@ -193,7 +269,7 @@ export class OrdersService {
       this.eventsGateway.notifyChefNewConfirmedOrder(updateStatusOrder);
     }
 
-    this.eventsGateway.notifyCustomerOrderStatus(id, newStatus);
+    this.eventsGateway.notifyCustomerOrderStatus(updateStatusOrder.id, newStatus);
 
     return updateStatusOrder;
   }
@@ -265,6 +341,34 @@ export class OrdersService {
       data: chartData
     };
   }
+
+  async checkout(id: number) {
+    const order = await this.prisma.order.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    
+    if(!order){
+      throw new NotFoundException('Đơn hàng không tồn tại');
+    }
+    
+    await this.prisma.$transaction([
+      this.prisma.order.update({
+        where: { id },
+        data: { status: OrderStatus.PAID },
+      }),
+
+      this.prisma.table.update({
+        where: { id: order.tableId },
+        data: { status: true },
+      }),
+    ])
+
+    return {
+      message: "Thanh toán thành công"
+    }
+  }
 }
 
 const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
@@ -272,4 +376,5 @@ const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
   [OrderStatus.COMFIRMED]: OrderStatus.IN_PROGRESS,
   [OrderStatus.IN_PROGRESS]: OrderStatus.COMPLETED,
   [OrderStatus.COMPLETED]: null,
+  [OrderStatus.PAID]: null,
 };

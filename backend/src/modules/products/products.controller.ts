@@ -45,7 +45,11 @@ export class ProductsController {
     return this.productsService.findOne(+id);
   }
 
+
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Cập nhật sản phẩm với ảnh minh họa.' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', {
@@ -61,6 +65,9 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.productsService.remove(+id);
   }

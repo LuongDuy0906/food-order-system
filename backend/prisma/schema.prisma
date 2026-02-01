@@ -83,6 +83,7 @@ model Order {
   status      OrderStatus @default(PENDING)
   items       OrderItem[]
   totalAmount Float       @default(0)
+  accessKey   String      @unique @default(uuid())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -111,4 +112,5 @@ enum OrderStatus {
   COMFIRMED
   IN_PROGRESS
   COMPLETED
+  PAID
 }

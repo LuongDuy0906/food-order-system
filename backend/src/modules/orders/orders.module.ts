@@ -5,10 +5,11 @@ import { EventsGateway } from 'src/events/events.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import jwtConfig from 'src/config/jwt.config';
+import { TablesService } from '../tables/tables.service';
 
 @Module({
   imports: [
-    JwtModule.registerAsync(jwtConfig.asProvider()), // 👈 Phải import cái này thì Gateway mới dùng được JwtService
+    JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule,
   ],
   controllers: [OrdersController],
