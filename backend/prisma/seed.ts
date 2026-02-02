@@ -1,9 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role, OrderStatus } from "@prisma/client";
+import { randomInt } from "crypto";
 
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log("Đang tạo dữ liệu mẫu...");
+    console.log("--- Bắt đầu quá trình Seed dữ liệu ---");
 
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
@@ -14,191 +15,114 @@ async function main() {
     await prisma.user.deleteMany();
     await prisma.employee.deleteMany();
 
-    const adminEmployee = await prisma.employee.upsert({
-        where: { id: 1 },
-        update: {},
-        create: {
-            name: "Lương Đức Duy",
-            address: "123 Admin Street",
-            email: "admin@example.com",
-            birthday: new Date("1990-01-01"),
-            phone: "0987654321",
-            user: {
-                create: {
-                    username: "admin@example.com",
-                    password: "$2a$10$TZ8eAvDqVYLYuHDoEzPokekzj1qjd8ksn278yA5TXcTgwEFb9GVDm",
-                    role: "ADMIN",
+    console.log("Đã dọn dẹp dữ liệu cũ.");
+
+    const roles: Role[] = ["ADMIN", "CHEF", "WAITER", "WAITER", "WAITER", "CHEF", "WAITER", "CHEF", "WAITER", "WAITER"];
+    const employees: any = [];
+    for (let i = 1; i <= 10; i++) {
+        const emp = await prisma.employee.create({
+            data: {
+                name: `Nhân viên ${i}`,
+                address: `${i}0 Láng Hạ, Hà Nội`,
+                email: `staff${i}@example.com`,
+                birthday: new Date(1990 + i, 0, 1),
+                phone: `091234567${i}`,
+                user: {
+                    create: {
+                        username: `user${i}`,
+                        password: "$2a$10$oqaTbh7r2GXj0FK9/voxQuo/AJqfQjmpIFtD8ctwlFCr3ji2muPPy", // Thực tế hãy dùng bcrypt
+                        role: roles[i - 1],
+                    }
                 }
             }
-        }
-    });
+        });
+        employees.push(emp);
+    }
+    console.log("Đã tạo 10 Employee & User");
 
-    const waiterEmployee = await prisma.employee.upsert({
-        where: { id: 2 },
-        update: {},
-        create: {
-            name: "waiter",
-            address: "123 Admin Street",
-            email: "waiter@example.com",
-            birthday: new Date("1990-01-01"),
-            phone: "0987654321",
-            user: {
-                create: {
-                    username: "waiter@example.com",
-                    password: "$2a$10$1z40eBv/as8PS9ANMbnc4u0wM2.9zfdADlvguwDk2Jc0sgHpr3Y9.",
-                    role: "WAITER",
+    const categories: any = [];
+    const categoryNames = ["Khai vị", "Món chính", "Tráng miệng", "Đồ uống"];
+    for (const name of categoryNames) {
+        const cat = await prisma.category.create({ data: { name } });
+        categories.push(cat);
+    }
+    console.log("Đã tạo 10 Category");
+    
+
+    const products: any = [];
+    for (let i = 1; i <= 10; i++) {
+        const prod = await prisma.product.create({
+            data: {
+                name: `Sản phẩm ${i}`,
+                description: `Mô tả chi tiết cho sản phẩm số ${i}`,
+                price: 20000 * i,
+                categoryId: categories[randomInt(4)].id,
+                images: {
+                    create: [
+                        { url: `https://picsum.photos/seed/${i}/200`, isPrimary: true }
+                    ]
                 }
             }
-        }
-    });
+        });
+        products.push(prod);
+    }
+    console.log("Đã tạo 10 Product và 20 Image");
 
-    const chefEmployee = await prisma.employee.upsert({
-        where: { id: 3 },
-        update: {},
-        create: {
-            name: "chef",
-            address: "123 Admin Street",
-            email: "chef@example.com",
-            birthday: new Date("1990-01-01"),
-            phone: "0987654321",
-            user: {
-                create: {
-                    username: "chef@example.com",
-                    password: "$2a$10$O/SsCd0pCe8KpWbQWZTi7OF7qvRuDAWeaO2H0zqJ8aalVhE9z4XCS",
-                    role: "CHEF",
-                }
+    const tables: any = [];
+    for (let i = 1; i <= 10; i++) {
+        const table = await prisma.table.create({
+            data: {
+                number: `B${i}`,
+                capacity: i % 2 === 0 ? 4 : 2,
+                floor: i <= 5 ? 1 : 2,
+                isVip: i > 8,
             }
-        }
-    });
+        });
+        tables.push(table);
+    }
+    console.log("Đã tạo 10 Table");
 
-    console.log("Khởi tạo thành công 3 người dùng.");
+    const orders: any = [];
+    const statuses: OrderStatus[] = ["PAID", "COMPLETED", "PENDING", "IN_PROGRESS", "COMFIRMED", "PAID", "PENDING", "COMPLETED", "PAID", "PENDING"];
+    for (let i = 0; i < 10; i++) {
+        const order = await prisma.order.create({
+            data: {
+                tableId: tables[i].id,
+                status: statuses[i],
+                totalAmount: 0,
+            }
+        });
+        orders.push(order);
+    }
+    console.log("Đã tạo 10 Order");
 
-    const table1 = await prisma.table.create({
-        data: {
-            number: "B1",
-            capacity: 4,
-            floor: 1,
-        },
-    });
+    for (let i = 0; i < 10; i++) {
+        const qty = Math.floor(Math.random() * 3) + 1;
+        const price = products[i].price;
+        
+        await prisma.orderItem.create({
+            data: {
+                orderId: orders[i].id,
+                productId: products[i].id,
+                quantity: qty,
+                price: price,
+                status: orders[i].status
+            }
+        });
 
-    const table2 = await prisma.table.create({
-        data: {
-            number: "B2",
-            capacity: 4,
-            floor: 1,
-        },
-    });
+        await prisma.order.update({
+            where: { id: orders[i].id },
+            data: { totalAmount: qty * price }
+        });
+    }
+    console.log("Đã tạo 10 OrderItem và cập nhật TotalAmount");
 
-    const table3 = await prisma.table.create({
-        data: {
-            number: "B3",
-            capacity: 4,
-            floor: 1,
-        },
-    });
-
-    const foodCategory = await prisma.category.create({
-        data: {
-            name: "Đồ ăn",
-            products: {
-                create: [
-                    { 
-                        name: "Phở bò", 
-                        price: 50000,
-                        description: "Phở bò tái chín, nước dùng thơm ngon, bánh phở mềm mại.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true, 
-                    },
-                    { 
-                        name: "Bún chả", 
-                        price: 45000,
-                        description: "Bún chả Hà Nội với thịt nướng thơm lừng, nước mắm chua ngọt.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true,  
-                    },
-                    { 
-                        name: "Cơm tấm", 
-                        price: 40000,
-                        description: "Cơm tấm sườn bì chả, ăn kèm với đồ chua và nước mắm pha.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true,   
-                    },
-                ],    
-            } 
-        },
-    });
-
-    const drinkCategory =  await prisma.category.create({
-        data: {
-            name: "Đồ uống",
-            products: {
-                create: [
-                    { 
-                        name: "Trà đá",
-                        price: 5000,
-                        description: "Ly trà đá mát lạnh, giải khát tuyệt vời.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true, 
-                    },
-                    { 
-                        name: "Cà phê sữa đá", 
-                        price: 20000,
-                        description: "Cà phê đen pha với sữa đặc, uống đá thơm ngon.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true, 
-                    },
-                    { 
-                        name: "Nước cam ép", 
-                        price: 25000,
-                        description: "Nước cam tươi ép nguyên chất, không đường.",
-                        images: {
-                            create: {
-                                url: "https://example.com/images/tra_da_1.jpg",
-                                isPrimary: true,
-                            }
-                        },
-                        isEnable: true, 
-                    },
-                ],    
-            } 
-        },
-    });
-
-    console.log("Tạo thành công 2 danh mục và 6 sản phẩm mẫu.");
+    console.log("--- Hoàn thành Seed dữ liệu mẫu thành công ---");
 }
 
 main()
-    .then(async () => {
-        console.log("Kết thúc quá trình tạo dữ liệu mẫu.");
-    })
-    .catch(async (e) => {
-        console.error("Lỗi khi tạo dữ liệu mẫu:", e);
-        await prisma.$disconnect();
+    .catch((e) => {
+        console.error(e);
         process.exit(1);
     })
     .finally(async () => {

@@ -4,12 +4,13 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as fs  from 'fs';
 import { join } from 'path';
+import { Product } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto, imagesUrl: string) {
+  async create(createProductDto: CreateProductDto, imagesUrl: string): Promise<Product> {
     return this.prisma.product.create({
       data: {
         name: createProductDto.name,
@@ -27,7 +28,7 @@ export class ProductsService {
     });
   }
 
-  async findAll() {
+  async findAll(): Promise<Product[]>{
     return await this.prisma.product.findMany({
       include: {
         images: true,
@@ -36,7 +37,7 @@ export class ProductsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number){
     return await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -46,7 +47,7 @@ export class ProductsService {
     });
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto, newImage: string) {
+  async update(id: number, updateProductDto: UpdateProductDto, newImage: string): Promise<Product> {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: { 
@@ -55,7 +56,7 @@ export class ProductsService {
     });
 
     if(!product){
-      throw new NotFoundException("Khong tim thay san pham");
+      throw new NotFoundException("Không tìm thấy sản phẩm");
     }
 
     const newProduct = {};
@@ -94,7 +95,7 @@ export class ProductsService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number): Promise<void> {
     const product =  await this.prisma.product.findUnique({
       where: { id },
       include: { 
@@ -103,7 +104,7 @@ export class ProductsService {
     });
 
     if(!product){
-      throw new NotFoundException("Khong tim thay san pham");
+      throw new NotFoundException("Không tìm thấy sản phẩm");
     }
 
     try {
@@ -114,7 +115,7 @@ export class ProductsService {
       this.deleteFromDisk(product.images);
     } catch (error) {
       console.log(error);
-      throw new InternalServerErrorException('Xoa san pham that bai');
+      throw new InternalServerErrorException('Xóa sản phẩm thất bại');
     }
   }
 

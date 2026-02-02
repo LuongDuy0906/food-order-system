@@ -10,9 +10,23 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './modules/auth/guards/roles/roles.guard';
+import { ConfigModule } from '@nestjs/config';
+import rabbitMqConfig from './config/rabbit-mq.config';
 
 @Module({
-  imports: [ProductsModule, PrismaModule, TablesModule, OrdersModule, EmployeesModule, UsersModule, AuthModule],
+  imports: [
+    ProductsModule, 
+    PrismaModule, 
+    TablesModule, 
+    OrdersModule, 
+    EmployeesModule, 
+    UsersModule, 
+    AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [rabbitMqConfig]
+    })
+  ],
   controllers: [AppController],
   providers: [
     AppService

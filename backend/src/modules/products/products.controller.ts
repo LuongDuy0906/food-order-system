@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Put, UseGuards, Res, HttpStatus } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -9,8 +9,8 @@ import { editFileName, imageFileFilter } from 'src/common/file-upload.utils';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
+import type { Response } from 'express';
 
 @ApiTags('Products')
 @Controller('products')
@@ -30,9 +30,16 @@ export class ProductsController {
     }),
     fileFilter: imageFileFilter,
   }))
-  create(@Body() createProductDto: CreateProductDto, @UploadedFile() file: Express.Multer.File) {
+  create(@Body() createProductDto: CreateProductDto, @UploadedFile() file: Express.Multer.File, @Res() res: Response) {
     const imagesUrl = `/uploads/products/${file.filename}`;
-    return this.productsService.create(createProductDto, imagesUrl);
+    let newProduct: any;
+    try {
+      newProduct = this.productsService.create(createProductDto, imagesUrl);
+      return res.status(HttpStatus.CREATED).json({newProduct: newProduct, message: "Thêm sản phẩm thành công!"});
+    } catch (error) {
+      console.log(error);
+      return res.status(HttpStatus.BAD_REQUEST).json({message: error.message});
+    }
   }
 
   @Get()
@@ -59,9 +66,16 @@ export class ProductsController {
     }),
     fileFilter: imageFileFilter,
   }))
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @UploadedFile() file: Express.Multer.File) {
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @UploadedFile() file: Express.Multer.File, @Res() res: Response) {
     const newImage = `/uploads/products/${file.filename}`;
-    return this.productsService.update(+id, updateProductDto, newImage);
+    let updatedProduct: any;
+    try {
+      updatedProduct = this.productsService.update(+id, updateProductDto, newImage);
+      return res.status(HttpStatus.OK).json({updatedProduct: updatedProduct, message: "Cập nhật sản phẩm thành công"});
+    } catch (error) {
+      console.log(error);
+      return res.status(HttpStatus.BAD_REQUEST).json({message: error.message});    
+    }
   }
 
   @Delete(':id')

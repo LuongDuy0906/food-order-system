@@ -4,7 +4,6 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import { EventsGateway } from 'src/events/events.gateway';
-import { ppid } from 'process';
 
 @Injectable()
 export class OrdersService {
@@ -13,85 +12,87 @@ export class OrdersService {
     private readonly eventsGateway: EventsGateway,
   ){}
 
-  async create(createOrderDto: CreateOrderDto) {
-    const { tableNumber, items } = createOrderDto;
-    const productsId = items.map(item => item.productId);
+  // src/orders/orders.service.ts
 
-    const products = await this.prisma.product.findMany({
-      where: {
-        id: { in: productsId },
-      },
-    });
+async processOrder(createOrderDto: CreateOrderDto) {
+    const { tableNumber, items, tempId } = createOrderDto;
 
-    const table = await this.prisma.table.findUnique({
-      select: { id: true, status: true },
-      where: {
-        number: tableNumber,
-      },
-    });
+    try {
+        const productsId = items.map(item => item.productId);
 
-    if(!table || table.status === false){
-      throw new BadRequestException('Bàn không khả dụng để đặt món');
+        const products = await this.prisma.product.findMany({
+            where: { id: { in: productsId } },
+        });
+
+        const table = await this.prisma.table.findUnique({
+            select: { id: true, status: true },
+            where: { number: tableNumber },
+        });
+
+        if (!table || table.status === false) { // Giả sử false là Bàn đang bận/Không khả dụng
+            throw new BadRequestException('Bàn không khả dụng hoặc đang có khách');
+        }
+
+        if (products.length !== productsId.length) {
+            throw new BadRequestException('Có sản phẩm không tồn tại hoặc đã bị xóa');
+        }
+
+        let totalAmount = 0;
+        const orderItemsData = items.map(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (!product) throw new NotFoundException(`Sản phẩm ID ${item.productId} không tồn tại.`);
+            
+            if (!product.isEnable) throw new BadRequestException(`Món ${product.name} đang tạm ngưng phục vụ.`);
+
+            totalAmount += product.price * item.quantity;
+            return {
+                productId: item.productId,
+                quantity: item.quantity,
+                price: product.price,
+            };
+        });
+
+        const [savedOrder] = await this.prisma.$transaction([
+            this.prisma.order.create({
+                data: {
+                    tableId: table.id,
+                    totalAmount,
+                    items: { create: orderItemsData },
+                },
+                include: {
+                    items: { include: { product: true } },
+                },
+            }),
+            
+            this.prisma.table.update({
+                where: { id: table.id },
+                data: { status: false }, 
+            }),
+        ]);
+
+        if (!this.eventsGateway) {
+            console.error('❌ LỖI LỚN: eventsGateway bị null/undefined!');
+            return;
+        }
+
+        console.log(`✅ Worker: Đã tạo xong đơn #${savedOrder.id} cho bàn ${tableNumber}`);
+
+        this.eventsGateway.notifyOrderCreated(tempId, {
+            id: savedOrder.id,
+            accessKey: savedOrder.accessKey,
+            message: 'Đặt món thành công!'
+        });
+
+        this.eventsGateway.notifyWaiterNewOrder(savedOrder);
+
+
+    } catch (error) {
+        console.error(`❌ Worker Lỗi: ${error.message}`);
+        this.eventsGateway.server.to(`waiting_room_${tempId}`).emit('order_created_fail', {
+            message: error.message || 'Có lỗi xảy ra khi xử lý đơn hàng'
+        });
     }
-
-    if (products.length !== productsId.length) {
-      throw new BadRequestException('Có sản phẩm không tồn tại hoặc đã bị xóa');
-    }
-
-
-    let totalAmount = 0;
-    const orderItemsData = items.map(item => {
-      const product = products.find(p => p.id === item.productId);
-
-      if (!product) {
-        throw new NotFoundException(`Sản phẩm với ID ${item.productId} không tồn tại hoặc đã bị xóa.`);
-      }
-
-      if (!product.isEnable) {
-         throw new BadRequestException(`Món ${product.name} hiện đang tạm hết.`);
-      }
-
-      const itemTotal = product.price * item.quantity;
-      totalAmount += itemTotal;
-
-      return {
-        productId: item.productId,
-        quantity: item.quantity,
-        price: product.price,
-      };
-    });
-
-    const [savedOrder] = await this.prisma.$transaction([
-      this.prisma.order.create({
-        data: {
-          tableId: table.id,
-          totalAmount,
-          items: {
-            create: orderItemsData,
-          },
-        },
-        include: {
-          items: { 
-            include: { 
-              product: true 
-            } 
-          },
-        },
-      }),
-      this.prisma.table.update({
-        where: { id: table.id },
-        data: { status: false },
-      }),
-    ]);
-
-    this.eventsGateway.notifyWaiterNewOrder(savedOrder);
-
-    return {
-      orderId: savedOrder.id,
-      accessKey: savedOrder.accessKey,
-      message: 'Đặt món thành công! Vui lòng lưu lại mã truy cập để theo dõi trạng thái đơn hàng.'
-    }
-  }
+}
 
   async findAll() {
     const today = new Date();
@@ -172,7 +173,12 @@ export class OrdersService {
       where: { id },
       include: {
         items: {
-          include: { product: true },
+          include: { 
+            product: true,
+          },
+          select: {
+            quantity: true
+          }
         },
         table: true,
       },
@@ -271,7 +277,10 @@ export class OrdersService {
 
     this.eventsGateway.notifyCustomerOrderStatus(updateStatusOrder.id, newStatus);
 
-    return updateStatusOrder;
+    return {
+      status: updateStatusOrder.status,
+      updated_at: updateStatusOrder.updatedAt
+    }
   }
 
   async remove(id: number) {
@@ -280,20 +289,26 @@ export class OrdersService {
     });
   }
 
-  async getTotalOrdersPerDay(startDate: string, endDate: string, type: string) {
+  async getTotalOrders(startDate: string, endDate: string, type: string) {
     const start = new Date(startDate)
     const end = new Date(endDate)
 
     const result = await this.prisma.order.aggregate({
+      _count:{
+        id: true
+      },
       _sum: {
         totalAmount: true,
+      },
+      _avg: {
+        totalAmount: true
       },
       where: {
         createdAt: {
           gte: start,
           lte: end,
         },
-        status: 'COMPLETED'
+        status: 'PAID'
       }
     });
 
@@ -303,7 +318,7 @@ export class OrdersService {
           gte: start,
           lte: end,
         },
-        status: "COMPLETED",
+        status: "PAID",
       },
       select: {
         createdAt: true,
@@ -336,9 +351,56 @@ export class OrdersService {
       value: groupedData[key]
     }));
 
+    const topItemsGrouped = await this.prisma.orderItem.groupBy({
+      by: ['productId'],
+      _sum: {
+        quantity: true,
+      },
+      where: {
+        order: {
+          createdAt: { gte: start, lte: end },
+          status: 'PAID'
+        }
+      },
+      orderBy: {
+        _sum: {
+          quantity: 'desc'
+        }
+      },
+      take: 5
+    });
+
+    const productIds = topItemsGrouped.map(item => item.productId);
+    
+    const productsInfo = await this.prisma.product.findMany({
+      where: {
+        id: { in: productIds }
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+      }
+    });
+
+    const topSellingItems = topItemsGrouped.map(item => {
+      const product = productsInfo.find(p => p.id === item.productId);
+      return {
+        id: item.productId,
+        name: product?.name || 'Sản phẩm đã xóa', // Fallback nếu SP bị xóa
+        quantity: item._sum.quantity || 0,
+        totalRevenue: (item._sum.quantity || 0) * (product?.price || 0) 
+      };
+    });
+
     return {
-      revenue: result._sum.totalAmount || 0,
-      data: chartData
+      revenue: {
+        totalOrder: result._count.id || 0,
+        totalAmount: result._sum.totalAmount || 0,
+        avgAmount: result._avg.totalAmount || 0
+      },
+      data: chartData,
+      topSelling: topSellingItems
     };
   }
 

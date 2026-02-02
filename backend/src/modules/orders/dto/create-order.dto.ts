@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsNumber, Min, ValidateNested } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsString, Min, ValidateNested } from "class-validator";
 
 class OrderItemDto {
     @ApiProperty({ example: 1, description: 'The ID of the product.' })
@@ -24,4 +24,8 @@ export class CreateOrderDto {
     @ApiProperty({ example: 5, description: 'The table number for the order.' })
     @IsNotEmpty({ message: "Số bàn không được để trống." })
     tableNumber: string;
+
+    @IsString()
+    @IsNotEmpty()
+    tempId: string;
 }

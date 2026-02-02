@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Inject } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -7,17 +7,30 @@ import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { ClientProxy, EventPattern, Payload } from '@nestjs/microservices';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    @Inject('ORDER_SERVICE')
+    private readonly rabbitClient: ClientProxy
+  ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.WAITER)
-  @ApiBearerAuth()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  placeOrder(@Body() createOrderDto: CreateOrderDto) {
+    this.rabbitClient.emit('new_order', createOrderDto);
+
+    return {
+      message: 'Đơn hàng đang được xử lý',
+      tempId: createOrderDto.tempId, 
+      status: 'QUEUED'
+    };
+  }
+
+  @EventPattern('new_order')
+  async handleNewOrder(@Payload() data: CreateOrderDto) {
+    await this.ordersService.processOrder(data);
   }
 
   @Get()
@@ -30,7 +43,7 @@ export class OrdersController {
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   getTotalOrdersPerDay(@Query('startDate') startDate: string, @Query('endDate') endDate: string, @Query('type') type: string) {
-    return this.ordersService.getTotalOrdersPerDay(startDate, endDate, type);
+    return this.ordersService.getTotalOrders(startDate, endDate, type);
   }
 
   @Get(':id')
@@ -69,4 +82,6 @@ export class OrdersController {
   checkout(@Param('id') id: string){
     return this.ordersService.checkout(+id);
   }
+
+
 }

@@ -3,14 +3,24 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { EventsGateway } from 'src/events/events.gateway';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import jwtConfig from 'src/config/jwt.config';
-import { TablesService } from '../tables/tables.service';
+import { ClientsModule } from '@nestjs/microservices';
+import rabbitMqConfig from 'src/config/rabbit-mq.config';
 
 @Module({
   imports: [
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule,
+    ClientsModule.registerAsync([
+      {
+        name: 'ORDER_SERVICE',
+        inject: [rabbitMqConfig.KEY],
+        useFactory: (config: ConfigType<typeof rabbitMqConfig>) => {
+          return config;
+        }
+      }
+    ]),
   ],
   controllers: [OrdersController],
   providers: [OrdersService, EventsGateway],

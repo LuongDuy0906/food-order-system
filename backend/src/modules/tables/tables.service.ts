@@ -2,12 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Table } from '@prisma/client';
 
 @Injectable()
 export class TablesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createTableDto: CreateTableDto) {
+  async create(createTableDto: CreateTableDto): Promise<Table> {
     return await this.prisma.table.create({
       data: {
         number: createTableDto.number,
@@ -18,11 +19,11 @@ export class TablesService {
     });
   }
 
-  async findAll() {
+  async findAll(): Promise<Table[]> {
     return await this.prisma.table.findMany();
   }
 
-  async findOne(number: string) {
+  async findOne(number: string): Promise<Table | any> {
     return await this.prisma.table.findUnique({
       select: {
         id: true,
@@ -32,7 +33,7 @@ export class TablesService {
     });
   }
 
-  async update(id: number, updateTableDto: UpdateTableDto) {
+  async update(id: number, updateTableDto: UpdateTableDto): Promise<Table>{
     const table = await this.prisma.table.findUnique({
       where: { id },
     });
@@ -56,7 +57,7 @@ export class TablesService {
   }
 
   async remove(id: number) {
-    return await this.prisma.table.delete({
+    await this.prisma.table.delete({
       where: { id },
     });
   }

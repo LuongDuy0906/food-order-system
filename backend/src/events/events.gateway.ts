@@ -55,6 +55,31 @@ export class EventsGateway{
         client.join('waiter_room')
     }
 
+    @SubscribeMessage('join_waiting_room')
+    handleJoinWaitingRoom(@ConnectedSocket() client: Socket, @MessageBody() payload: any) {
+        let id = payload;
+
+      if (typeof payload === 'string') {
+          try {
+              const parsed = JSON.parse(payload);
+              if (parsed.tempId) {
+                  id = parsed.tempId;
+              }
+          } catch (error) {
+          }
+      } 
+      else if (typeof payload === 'object' && payload.tempId) {
+          id = payload.tempId;
+      }
+
+      id = String(id).trim();
+
+      const roomName = `waiting_room_${id}`;
+      client.join(roomName);
+      
+      console.log(`Client join phòng chờ chính xác: [${roomName}]`);
+    }
+
     @UseGuards(RolesGuard)
     @Roles(Role.CHEF)
     @SubscribeMessage('join_chef_room')
@@ -81,7 +106,7 @@ export class EventsGateway{
         console.log('📦 Payload sau khi xử lý:', payload);
 
         if (!payload || !payload.orderId || !payload.accessKey) {
-            console.log('❌ Thiếu orderId hoặc accessKey');
+            console.log('hiếu orderId hoặc accessKey');
             return;
         }
 
@@ -90,18 +115,38 @@ export class EventsGateway{
         });
 
         if (!order) {
-            console.log(`❌ Đơn hàng ${payload.orderId} không tồn tại`);
+            console.log(`Đơn hàng ${payload.orderId} không tồn tại`);
             return;
         }
 
         if(order.accessKey !== payload.accessKey) {
-            console.log(`❌ Mã truy cập không hợp lệ cho đơn hàng ${payload.orderId}`);
+            console.log(`Mã truy cập không hợp lệ cho đơn hàng ${payload.orderId}`);
             return;
         }
 
         const roomName = `order_${payload.orderId}`;
         client.join(roomName);
         console.log(`✅ Khách hàng đã vào theo dõi đơn ${payload.orderId} (Key hợp lệ)`);
+    }
+
+    @SubscribeMessage('customer_request_service')
+    handleCustomerRequest(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: {tableNumber: string, content: string}
+    ){
+        let data = payload;
+        if (typeof payload === 'string') {
+            try { data = JSON.parse(payload); } catch(e) {}
+        }
+
+        console.log(`Bàn ${data.tableNumber} gọi: ${data.content}`);
+
+        this.server.to('waiter_room').emit('waiter_notification', {
+            type: 'SERVER_REQUEST',
+            tableNumber: data.tableNumber,
+            message: data.content,
+            time: new Date()
+        })
     }
 
     notifyWaiterNewOrder(order: any){
@@ -114,5 +159,9 @@ export class EventsGateway{
 
     notifyCustomerOrderStatus(orderId: number, status: string) {
         this.server.to(`order_${orderId}`).emit('order_status_updated', { status });
+    }
+
+    notifyOrderCreated(tempId: string, result: any) {
+        this.server.to(`waiting_room_${tempId}`).emit('order_created_success', result);
     }
 }
