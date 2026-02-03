@@ -13,27 +13,18 @@ async function main() {
     await prisma.category.deleteMany();
     await prisma.table.deleteMany();
     await prisma.user.deleteMany();
-    await prisma.employee.deleteMany();
 
     console.log("Đã dọn dẹp dữ liệu cũ.");
 
     const roles: Role[] = ["ADMIN", "CHEF", "WAITER", "WAITER", "WAITER", "CHEF", "WAITER", "CHEF", "WAITER", "WAITER"];
     const employees: any = [];
     for (let i = 1; i <= 10; i++) {
-        const emp = await prisma.employee.create({
+        const emp = await prisma.user.create({
             data: {
                 name: `Nhân viên ${i}`,
-                address: `${i}0 Láng Hạ, Hà Nội`,
-                email: `staff${i}@example.com`,
-                birthday: new Date(1990 + i, 0, 1),
-                phone: `091234567${i}`,
-                user: {
-                    create: {
-                        username: `user${i}`,
-                        password: "$2a$10$oqaTbh7r2GXj0FK9/voxQuo/AJqfQjmpIFtD8ctwlFCr3ji2muPPy", // Thực tế hãy dùng bcrypt
-                        role: roles[i - 1],
-                    }
-                }
+                username: `user${i}`,
+                password: "$2a$10$OyHZ2SeT1OEIyBIUShY8puLEtv5hcZM3jxcVZ7WeH4KzVXDfSTive",
+                role: roles[i - 1]
             }
         });
         employees.push(emp);
