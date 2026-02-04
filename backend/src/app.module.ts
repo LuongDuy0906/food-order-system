@@ -8,6 +8,9 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { FloorsController } from './modules/floors/floors.controller';
+import { FloorsModule } from './modules/floors/floors.module';
 import rabbitMqConfig from './config/rabbit-mq.config';
 
 @Module({
@@ -21,9 +24,11 @@ import rabbitMqConfig from './config/rabbit-mq.config';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [rabbitMqConfig]
-    })
+    }),
+    CategoriesModule,
+    FloorsModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, FloorsController],
   providers: [
     AppService
   ],

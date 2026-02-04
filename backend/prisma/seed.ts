@@ -12,6 +12,7 @@ async function main() {
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
     await prisma.table.deleteMany();
+    await prisma.table.deleteMany();
     await prisma.user.deleteMany();
 
     console.log("Đã dọn dẹp dữ liệu cũ.");
@@ -59,19 +60,32 @@ async function main() {
     }
     console.log("Đã tạo 10 Product và 20 Image");
 
+    const floor1 = await prisma.floor.create({ data: { name: "Tầng 1"} });
+    const floor2 = await prisma.floor.create({ data: { name: "Tầng 2" } });
+    const floorVip = await prisma.floor.create({ data: { name: "Tầng VIP" } });
+    console.log("Đã tạo 3 tầng: Tầng 1, Tầng 2, Tầng VIP");
+
     const tables: any = [];
-    for (let i = 1; i <= 10; i++) {
-        const table = await prisma.table.create({
-            data: {
-                number: `B${i}`,
-                capacity: i % 2 === 0 ? 4 : 2,
-                floor: i <= 5 ? 1 : 2,
-                isVip: i > 8,
-            }
-        });
-        tables.push(table);
+    const tableConfig = [
+        { floorId: floor1.id, count: 4, prefix: "B1" },
+        { floorId: floor2.id, count: 4, prefix: "B2" },
+        { floorId: floorVip.id, count: 2, prefix: "VIP" },
+    ];
+
+    for (const config of tableConfig) {
+        for (let i = 1; i <= config.count; i++) {
+            const table = await prisma.table.create({
+                data: {
+                    number: `${config.prefix}${i}`,
+                    capacity: config.prefix === "V" ? 8 : 4,
+                    floorId: config.floorId,
+                    status: true
+                }
+            });
+            tables.push(table);
+        }
     }
-    console.log("Đã tạo 10 Table");
+    console.log(`Đã tạo xong 10 bàn (4 Tầng 1, 4 Tầng 2, 2 Tầng VIP)`);
 
     const orders: any = [];
     const statuses: OrderStatus[] = ["PAID", "COMPLETED", "PENDING", "IN_PROGRESS", "COMFIRMED", "PAID", "PENDING", "COMPLETED", "PAID", "PENDING"];

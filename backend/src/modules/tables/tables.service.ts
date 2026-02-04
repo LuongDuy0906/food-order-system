@@ -13,8 +13,7 @@ export class TablesService {
       data: {
         number: createTableDto.number,
         capacity: createTableDto.capacity,
-        floor: createTableDto.floor,
-        isVip: createTableDto.isVip
+        floorId: createTableDto.floorId
       },
     });
   }

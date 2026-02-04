@@ -15,7 +15,7 @@ export class CreateTableDto {
     @ApiProperty()
     @IsNotEmpty({message: "Vị trí VIP không được để trống."})
     @IsNumber()
-    floor: number
+    floorId: number
 
     @ApiProperty()
     @IsOptional()

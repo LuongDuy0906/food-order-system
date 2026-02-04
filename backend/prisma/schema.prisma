@@ -53,12 +53,20 @@ model Image {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
+model Floor {
+  id        Int      @id @default(autoincrement())
+  name      String
+  table     Table[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Table {
   id        Int      @id @default(autoincrement())
   number    String   @unique
   capacity  Int
-  floor     Int
-  isVip     Boolean  @default(false)
+  floorId   Int
+  floor     Floor    @relation(fields: [floorId], references: [id], onDelete: Cascade)
   status    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
