@@ -39,7 +39,7 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const existUser = this.prisma.user.findUnique({
+    const existUser = await this.prisma.user.findUnique({
       where: {
         id: id
       }
@@ -72,7 +72,7 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const existUser = this.prisma.user.findUnique({
+    const existUser = await this.prisma.user.findUnique({
       where: {
         id: id
       }
