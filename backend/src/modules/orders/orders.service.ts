@@ -12,8 +12,6 @@ export class OrdersService {
     private readonly eventsGateway: EventsGateway,
   ){}
 
-  // src/orders/orders.service.ts
-
 async processOrder(createOrderDto: CreateOrderDto) {
     const { tableNumber, items, tempId } = createOrderDto;
 
@@ -29,7 +27,7 @@ async processOrder(createOrderDto: CreateOrderDto) {
             where: { number: tableNumber },
         });
 
-        if (!table || table.status === false) { // Giả sử false là Bàn đang bận/Không khả dụng
+        if (!table) { // Giả sử false là Bàn đang bận/Không khả dụng
             throw new BadRequestException('Bàn không khả dụng hoặc đang có khách');
         }
 
@@ -49,26 +47,20 @@ async processOrder(createOrderDto: CreateOrderDto) {
                 productId: item.productId,
                 quantity: item.quantity,
                 price: product.price,
+                note: item.note
             };
         });
 
-        const [savedOrder] = await this.prisma.$transaction([
-            this.prisma.order.create({
-                data: {
-                    tableId: table.id,
-                    totalAmount,
-                    items: { create: orderItemsData },
-                },
-                include: {
-                    items: { include: { product: true } },
-                },
-            }),
-            
-            this.prisma.table.update({
-                where: { id: table.id },
-                data: { status: false }, 
-            }),
-        ]);
+        const savedOrder = await this.prisma.order.create({
+          data: {
+            tableId: table.id,
+            totalAmount,
+            items: { create: orderItemsData },
+          },
+          include: {
+            items: { include: { product: true } },
+          },
+        });
 
         if (!this.eventsGateway) {
             console.error('❌ LỖI LỚN: eventsGateway bị null/undefined!');
@@ -230,6 +222,7 @@ async processOrder(createOrderDto: CreateOrderDto) {
         productId: item.productId,
         quantity: item.quantity,
         price: product.price,
+        note: item.note
       };
     });
 
@@ -269,6 +262,30 @@ async processOrder(createOrderDto: CreateOrderDto) {
     const updateStatusOrder = await this.prisma.order.update({
       where: { id },
       data: { status: newStatus },
+      select:{
+        id: true,
+        totalAmount: true,
+        createdAt: true,
+        updatedAt: true,
+        status: true,
+        table: {
+          select: {
+            number: true
+          }
+        },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            product: {
+              select: {
+                name: true,
+              }
+            },
+            note: true
+          }
+        }
+      }
     });
 
     if(newStatus === OrderStatus.COMFIRMED){

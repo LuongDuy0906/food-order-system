@@ -28,7 +28,7 @@ import rabbitMqConfig from './config/rabbit-mq.config';
     CategoriesModule,
     FloorsModule
   ],
-  controllers: [AppController, FloorsController],
+  controllers: [AppController],
   providers: [
     AppService
   ],

@@ -21,11 +21,25 @@ export class TablesController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   findAll() {
     return this.tablesService.findAll();
   }
 
+  @Get("orders")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.WAITER)
+  @ApiBearerAuth()
+  findAllWithOrders(){
+    return this.tablesService.findAllWithOrders();
+  }
+
   @Get(':number')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.WAITER)
+  @ApiBearerAuth()
   findOne(@Param('number') number: string) {
     return this.tablesService.findOne(number);
   }

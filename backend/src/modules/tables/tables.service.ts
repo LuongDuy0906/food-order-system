@@ -22,6 +22,42 @@ export class TablesService {
     return await this.prisma.table.findMany();
   }
 
+  async findAllWithOrders() {
+    return this.prisma.table.findMany({
+      select: {
+        id: true,
+        number: true,
+        capacity: true,
+        floorId: true,
+        orders: {
+          where: {
+            status: {
+              not: 'PAID'
+            }
+          },
+          select: {
+            id: true,
+            status: true,
+            totalAmount: true,
+            items: {
+              select: {
+                id: true,
+                quantity: true,
+                note: true,
+                product: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+
   async findOne(number: string): Promise<Table | any> {
     return await this.prisma.table.findUnique({
       select: {

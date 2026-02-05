@@ -98,12 +98,12 @@ export class EventsGateway{
             try {
                 payload = JSON.parse(rawPayload);
             } catch (error) {
-                console.log('❌ Lỗi định dạng JSON:', rawPayload);
+                console.log('Lỗi định dạng JSON:', rawPayload);
                 return; 
             }
         }
 
-        console.log('📦 Payload sau khi xử lý:', payload);
+        console.log('Payload sau khi xử lý:', payload);
 
         if (!payload || !payload.orderId || !payload.accessKey) {
             console.log('hiếu orderId hoặc accessKey');
@@ -126,7 +126,7 @@ export class EventsGateway{
 
         const roomName = `order_${payload.orderId}`;
         client.join(roomName);
-        console.log(`✅ Khách hàng đã vào theo dõi đơn ${payload.orderId} (Key hợp lệ)`);
+        console.log(`Khách hàng đã vào theo dõi đơn ${payload.orderId} (Key hợp lệ)`);
     }
 
     @SubscribeMessage('customer_request_service')
@@ -158,7 +158,7 @@ export class EventsGateway{
     }
 
     notifyCustomerOrderStatus(orderId: number, status: string) {
-        this.server.to(`order_${orderId}`).emit('order_status_updated', { status });
+        this.server.to(`order_${orderId}`).emit('order_status_updated', { orderId, status });
     }
 
     notifyOrderCreated(tempId: string, result: any) {

@@ -111,7 +111,7 @@ async function main() {
                 productId: products[i].id,
                 quantity: qty,
                 price: price,
-                status: orders[i].status
+                note: "Chỉ đơn giản là món ăn trong đơn thôi"
             }
         });
 
