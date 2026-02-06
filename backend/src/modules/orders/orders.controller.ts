@@ -46,6 +46,14 @@ export class OrdersController {
     return this.ordersService.getTotalOrders(startDate, endDate, type);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CHEF)
+  @ApiBearerAuth()
+  @Get("tables")
+  findAllOrdersWithTables(){
+    return this.ordersService.findAllWithTable();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ordersService.findOne(+id);

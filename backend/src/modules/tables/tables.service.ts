@@ -44,6 +44,7 @@ export class TablesService {
                 id: true,
                 quantity: true,
                 note: true,
+                price: true,
                 product: {
                   select: {
                     id: true,

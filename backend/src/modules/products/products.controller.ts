@@ -52,7 +52,6 @@ export class ProductsController {
     return this.productsService.findOne(+id);
   }
 
-
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

@@ -12,7 +12,7 @@ export class OrdersService {
     private readonly eventsGateway: EventsGateway,
   ){}
 
-async processOrder(createOrderDto: CreateOrderDto) {
+  async processOrder(createOrderDto: CreateOrderDto) {
     const { tableNumber, items, tempId } = createOrderDto;
 
     try {
@@ -59,6 +59,7 @@ async processOrder(createOrderDto: CreateOrderDto) {
           },
           include: {
             items: { include: { product: true } },
+            table: true
           },
         });
 
@@ -84,7 +85,7 @@ async processOrder(createOrderDto: CreateOrderDto) {
             message: error.message || 'Có lỗi xảy ra khi xử lý đơn hàng'
         });
     }
-}
+  }
 
   async findAll() {
     const today = new Date();
@@ -160,20 +161,56 @@ async processOrder(createOrderDto: CreateOrderDto) {
     };
   }
 
+  async findAllWithTable(){
+    return await this.prisma.order.findMany({
+      select: {
+        id: true,
+        status: true,
+        table: {
+          select: {
+            id: true,
+            number: true
+          }
+        },
+        items: {
+          select: {
+            quantity: true,
+            note: true,
+            product: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+
   async findOne(id: number) {
     return await this.prisma.order.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
         items: {
-          include: { 
-            product: true,
-          },
           select: {
-            quantity: true
+            quantity: true,
+            product: {
+              select: {
+                name: true,
+              }
+            }
           }
         },
-        table: true,
-      },
+        table: {
+          select: {
+            id: true,
+            number: true,
+          }
+        }
+      }
     });
   }
 
