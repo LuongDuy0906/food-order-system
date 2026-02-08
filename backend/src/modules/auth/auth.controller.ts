@@ -1,8 +1,6 @@
-import { Body, Controller, Post, UseGuards} from '@nestjs/common';
+import { Body, Controller, Post} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
-import { User } from '../users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {

@@ -90,6 +90,4 @@ export class OrdersController {
   checkout(@Param('id') id: string){
     return this.ordersService.checkout(+id);
   }
-
-
 }
