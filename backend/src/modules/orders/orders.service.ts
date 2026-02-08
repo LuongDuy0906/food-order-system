@@ -64,11 +64,11 @@ export class OrdersService {
         });
 
         if (!this.eventsGateway) {
-            console.error('❌ LỖI LỚN: eventsGateway bị null/undefined!');
+            console.error('LỖI LỚN: eventsGateway bị null/undefined!');
             return;
         }
 
-        console.log(`✅ Worker: Đã tạo xong đơn #${savedOrder.id} cho bàn ${tableNumber}`);
+        console.log(`Worker: Đã tạo xong đơn #${savedOrder.id} cho bàn ${tableNumber}`);
 
         this.eventsGateway.notifyOrderCreated(tempId, {
             id: savedOrder.id,
@@ -80,7 +80,7 @@ export class OrdersService {
 
 
     } catch (error) {
-        console.error(`❌ Worker Lỗi: ${error.message}`);
+        console.error(`Worker Lỗi: ${error.message}`);
         this.eventsGateway.server.to(`waiting_room_${tempId}`).emit('order_created_fail', {
             message: error.message || 'Có lỗi xảy ra khi xử lý đơn hàng'
         });
