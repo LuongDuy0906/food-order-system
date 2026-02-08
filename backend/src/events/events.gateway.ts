@@ -6,7 +6,6 @@ import { Role } from "@prisma/client";
 import { Server, Socket } from "socket.io";
 import { Roles } from "src/modules/auth/decorators/roles.decorator";
 import { RolesGuard } from "src/modules/auth/guards/roles/roles.guard";
-import { OrdersService } from "src/modules/orders/orders.service";
 import { PrismaService } from "src/prisma/prisma.service";
 
 interface JoinOrderInterface {
@@ -24,7 +23,9 @@ export class EventsGateway{
       private jwtService: JwtService,
       private configService: ConfigService,
       private readonly prisma: PrismaService,
-    ) {}
+    ) {
+        this.server = new Server();
+    }
 
     async handleConnection(client: Socket) {
         try {
