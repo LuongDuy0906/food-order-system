@@ -37,9 +37,6 @@ export class TablesController {
   }
 
   @Get(':number')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.WAITER)
-  @ApiBearerAuth()
   findOne(@Param('number') number: string) {
     return this.tablesService.findOne(number);
   }

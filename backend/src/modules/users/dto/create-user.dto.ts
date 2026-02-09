@@ -20,6 +20,6 @@ export class CreateUserDto {
 
     @ApiProperty({example: "Vai trò"})
     @IsOptional()
-    @IsEnum({Role}, {message: "Role không phù hợp"})
+    @IsEnum(Role, {message: "Role không phù hợp"})
     role: Role
 }

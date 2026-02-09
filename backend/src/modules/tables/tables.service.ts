@@ -64,6 +64,24 @@ export class TablesService {
       select: {
         id: true,
         number: true,
+        orders: {
+          select: {
+            createdAt: true,
+            status: true,
+            totalAmount: true,
+            items: {
+              select: {
+                quantity: true,
+                price: true,
+                product: {
+                  select: {
+                    name: true,
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       where: { number },
     });
